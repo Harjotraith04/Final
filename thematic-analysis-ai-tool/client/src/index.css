@@ -1,0 +1,55 @@
+/* Global styles for fixed layout */
+html, body, #root {
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom scrollbar styling for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 123, 255, 0.3);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 123, 255, 0.5);
+}
+
+/* Smooth scrolling behavior */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Ensure all containers take full height when needed */
+.App {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Modern focus outline */
+*:focus-visible {
+  outline: 2px solid rgba(0, 123, 255, 0.5);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Remove default focus outline */
+*:focus {
+  outline: none;
+}
+
+/* Ensure consistent box-sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}

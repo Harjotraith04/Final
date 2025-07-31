@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { apiRequest } from '../utils/api';
+import { useGlobalState } from '../utils/globalState';
 import {
   Box,
   Typography,
@@ -67,6 +68,8 @@ import { codesApi, codeAssignmentsApi } from '../utils/api';
 import AIGenerationButtons from './AIGenerationButtons';
 
 const MergingPage = ({ projectId, codes = [], codeAssignments = [], documents = [], codebooks = [], refreshProjectData, currentUser, projectData }) => {
+  // Access global state
+  const { getProjectData, updateProjectData } = useGlobalState();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
@@ -226,14 +229,23 @@ const MergingPage = ({ projectId, codes = [], codeAssignments = [], documents = 
         body: JSON.stringify({ status: newStatus }),
       });
       
-      if (response.ok) {
+      if (response) {
         // Status updated successfully
         console.log(`Assignment ${assignmentId} status updated to ${newStatus}`);
         
         // If status was set to rejected, the assignment was deleted from database
-        // Refresh project data to update the UI
-        if (newStatus === 'rejected' && refreshProjectData) {
-          await refreshProjectData();
+        // We need to update both local and global state
+        if (newStatus === 'rejected') {
+          // Update global state first
+          const latestData = await getProjectData(projectId);
+          if (latestData) {
+            updateProjectData(projectId, latestData);
+          }
+          
+          // Then refresh local component state
+          if (refreshProjectData) {
+            await refreshProjectData();
+          }
         }
       } else {
         console.error('Failed to update assignment status');
@@ -373,7 +385,13 @@ const MergingPage = ({ projectId, codes = [], codeAssignments = [], documents = 
       
       console.log('Bulk update response:', response);
       
-      // Refresh project data to get updated assignments
+      // Update global state first with fresh data
+      const latestData = await getProjectData(projectId);
+      if (latestData) {
+        updateProjectData(projectId, latestData);
+      }
+      
+      // Then refresh local component state
       if (refreshProjectData) {
         await refreshProjectData();
       }
@@ -765,7 +783,13 @@ const MergingPage = ({ projectId, codes = [], codeAssignments = [], documents = 
       console.log('Submit successful:', result);
       setSubmitSuccess(true);
       
-      // Refresh project data to get updated status
+      // Update global state first with fresh data
+      const latestData = await getProjectData(projectId);
+      if (latestData) {
+        updateProjectData(projectId, latestData);
+      }
+      
+      // Then refresh local component state
       if (refreshProjectData) {
         await refreshProjectData();
       }
@@ -1420,8 +1444,8 @@ const MergingPage = ({ projectId, codes = [], codeAssignments = [], documents = 
       
       setLoadingCollaboratorData(true);
       try {
-        // Fetch project data with collaborator submissions
-        const projectResponse = await apiRequest(`/projects/${projectId}`);
+        // Use global state to get project data
+        const projectResponse = await getProjectData(projectId);
         
         if (projectResponse && projectResponse.submitted_assignments_by_user) {
           setCollaboratorSubmissions(projectResponse.submitted_assignments_by_user);
@@ -1441,7 +1465,7 @@ const MergingPage = ({ projectId, codes = [], codeAssignments = [], documents = 
     };
 
     fetchCollaboratorData();
-  }, [projectId]);
+  }, [projectId, getProjectData]);
 
   useEffect(() => {
     const fetchDocumentContents = async () => {

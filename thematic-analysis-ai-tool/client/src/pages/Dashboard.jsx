@@ -40,6 +40,7 @@ import {
   StatusBadge
 } from '../components/StyledComponents';
 import { projectsApi, usersApi } from '../utils/api';
+import { useGlobalState } from '../utils/globalState';
 
 function Dashboard() {
   const theme = useTheme();
@@ -121,7 +122,12 @@ function Dashboard() {
         }
         
         console.log(`Fetching complete project data for project ${projectId}`);
-        const data = await projectsApi.getProjectWithContent(projectId);
+        // Use global state to get project data
+        const data = await getProjectData(projectId);
+        
+        if (!data) {
+          throw new Error('Failed to get project data');
+        }
         
         // Debug: Log the complete response to see the structure
         console.log("Complete project data response:", data);
@@ -194,6 +200,9 @@ function Dashboard() {
     setNavigationExpanded(isExpanded);
   };
 
+  // Get global state utilities
+  const { getProjectData, updateProjectData } = useGlobalState();
+
   // Function to refresh project data after operations
   const refreshProjectData = async () => {
     if (isRefreshing) {
@@ -204,7 +213,14 @@ function Dashboard() {
     try {
       setIsRefreshing(true);
       console.log(`Refreshing project data for project ${projectId}`);
-      const data = await projectsApi.getProjectWithContent(projectId);
+      
+      // Use global state to get project data
+      const data = await getProjectData(projectId);
+      
+      if (!data) {
+        console.error('Failed to get project data');
+        return;
+      }
       
       // Update all relevant state with fresh data
       setProjectData({
@@ -232,6 +248,9 @@ function Dashboard() {
       if (data.annotations && Array.isArray(data.annotations)) {
         setCommentData(data.annotations);
       }
+      
+      // Update the global state with our local changes (for other components)
+      updateProjectData(projectId, data);
       
       console.log('Project data refreshed successfully');
     } catch (err) {

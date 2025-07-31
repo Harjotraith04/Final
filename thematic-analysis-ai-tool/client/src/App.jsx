@@ -1,4 +1,5 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
+import { GlobalStateProvider } from './utils/globalState';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import Landing from './pages/Landing';
@@ -406,7 +407,8 @@ function App() {
     <ThemeModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
+        <GlobalStateProvider>
+          <Router>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
@@ -417,6 +419,7 @@ function App() {
             <Route path="/auth/github/callback" element={<AuthCallback />} />
           </Routes>
         </Router>
+        </GlobalStateProvider>
       </ThemeProvider>
     </ThemeModeContext.Provider>
   );
